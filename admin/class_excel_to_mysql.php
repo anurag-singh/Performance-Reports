@@ -22,43 +22,46 @@ class Excel2Mysql extends Custom_Filter_For_Excel
 
 
     /*  Get all records form table  */
-    public function fetch_records_from_db($excelRow)
+    public function fetch_records_from_db($sheetData)
     {
-        global $wpdb;
-        $dbColumns = $this->dbColumns;
-        $postType = $this->postType;
-        $dbColumns = implode(', ', $dbColumns);
+        foreach($sheetData as $excelRow) 
+        {
+            global $wpdb;
+            $dbColumns = $this->dbColumns;
+            $postType = $this->postType;
+            $dbColumns = implode(', ', $dbColumns);
 
-        $query = "SELECT meta_key, meta_value
-          FROM $wpdb->posts
-          LEFT JOIN $wpdb->postmeta
-          ON ($wpdb->posts.ID = $wpdb->postmeta.post_id)
-          WHERE $wpdb->posts.post_type = '".$postType. "'
-          AND $wpdb->posts.post_name = '".$excelRow['stockID']."'
-          AND $wpdb->posts.ID = $wpdb->postmeta.post_id
-          ORDER BY post_date DESC";
+            $query = "SELECT meta_key, meta_value
+              FROM $wpdb->posts
+              LEFT JOIN $wpdb->postmeta
+              ON ($wpdb->posts.ID = $wpdb->postmeta.post_id)
+              WHERE $wpdb->posts.post_type = '".$postType. "'
+              AND $wpdb->posts.post_name = '".$excelRow['stockID']."'
+              AND $wpdb->posts.ID = $wpdb->postmeta.post_id
+              ORDER BY post_date DESC";
 
-        $mysqlDataArray = $wpdb->get_results($query);
+            $mysqlDataArray = $wpdb->get_results($query);
 
-        //print_r($mysqlDataArray);
-        
-        $dbColumns = explode(', ', $dbColumns);
-        
-        foreach($mysqlDataArray as $rowArray) {
-            //print_r($rowArray);
-            //echo $rowArray->meta_key;
-            //echo $rowArray->meta_value;
+            //print_r($mysqlDataArray);
 
-            foreach($dbColumns as $col)
-            {
-                if(($rowArray->meta_key) == $col)
+            $dbColumns = explode(', ', $dbColumns);
+
+            foreach($mysqlDataArray as $rowArray) {
+                //print_r($rowArray);
+                //echo $rowArray->meta_key;
+                //echo $rowArray->meta_value;
+
+                foreach($dbColumns as $col)
                 {
-                    $sanitizedDbMetaRow[$rowArray->meta_key] = $rowArray->meta_value;
-            
-                }             
-            }            
-        }
-        return $sanitizedDbMetaRow;
+                    if(($rowArray->meta_key) == $col)
+                    {
+                        $sanitizedDbMetaRow[$rowArray->meta_key] = $rowArray->meta_value;
+
+                    }             
+                }            
+            }
+            return $sanitizedDbMetaRow;
+        }    
     }
 
 
@@ -111,23 +114,29 @@ class Excel2Mysql extends Custom_Filter_For_Excel
             //print_r($excelSheetDataArray);
             //echo '</pre>';
 
+            $i = 0;
             foreach ($excelSheetDataArray as $excelRow) {
+                //print_r($excelRow);
                 $excelSheetValues = array_values($excelRow);
                 //print_r($excelSheetValues);
-
-                $excelRowSanitizedArray = array_combine($dbColumns, $excelSheetValues);
-
-               if(!empty($excelRowSanitizedArray['stockID'])) { // return array which have a 'stockID'
-                    return $excelRowSanitizedArray;
-               }
+                
+                if(!empty ($excelRow['A'])) {
+                    $excelKeysValues = array_combine($dbColumns, $excelSheetValues);    
+                    //echo '<pre>';
+                    //print_r($excelKeysValues);
+                    //echo '</pre>';
+                    $excelRowSanitizedArray[$i] = $excelKeysValues;
+                    $i++;
+                }
             }
+            return $excelRowSanitizedArray;
         }
     }
 
 
-    public function get_duplicate_records_from_db($sheetData, $table, array $columns)
+    public function get_duplicate_records_from_db($sheetData, $dbRow)
     {
-        $colNames = implode(', ', $columns);
+        
 
         foreach ($sheetData as $excelrow) {
             //echo $excelrow['A'];
