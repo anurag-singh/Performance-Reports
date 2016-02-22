@@ -11,82 +11,67 @@ class Excel2Mysql extends Custom_Filter_For_Excel
 {
     public $conn;
     private $excelSheetDataArray;
-    private $table;
-   // private $duplicateRecordsFoundInDb;
+    private $dbColumns = array('stockID', 'stockName', 'action', 'entryDate', 'entryPrice', 'targetPrice', 'stopLoss', 'exitDate', 'exitPrice');
+    private $postType = 'performance_report';
+    //private $table = 'report_performance';
 
-
-
-
-    /*  Create and select Database  */
-    private function create_and_select_db($db)
-    {
-        $createDB = 'CREATE DATABASE IF NOT EXISTS '.$db;
-
-        if ($this->conn->query($createDB) === TRUE)
-        {
-            echo 'Database "' .$db. '" created successfully. <br>';
-            $this->conn->select_db($db);
-        }
-        else
-        {
-            echo 'Found error while creating database - ' . $this->conn->error .'<br>';
-        }
-    }
-
-
-    /*  Create Table  */
-    public function create_table($table)
-    {
-        $createTable = 'CREATE TABLE IF NOT EXISTS '. $table .' (
-            ID INT(6) UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-            stockID VARCHAR(12) NOT NULL,
-            stockName VARCHAR(50) NOT NULL,
-            action VARCHAR(12) NOT NULL,
-            entryDate VARCHAR(12) NOT NULL,
-            exitDate VARCHAR(12) NOT NULL,
-            entryPrice VARCHAR(12) NOT NULL,
-            exitPrice VARCHAR(12) NOT NULL,
-            targetPrice VARCHAR(12) NOT NULL,
-            stopLoss VARCHAR(12) NOT NULL,
-            callStartDate TIMESTAMP
-        )';
-
-        if ($this->conn->query($createTable) === TRUE)
-        {
-            echo 'Table "' .$table. '" created successfully.<br>';
-        }
-        else
-        {
-            echo 'Found Error while creating table - ' .$this->conn->error.'<br>';
-        }
+    function __construct() {
 
     }
+
 
 
     /*  Get all records form table  */
-    public function fetch_records_from_db($table, array $columns)
+    public function fetch_records_from_db($excelRow)
     {
-        $columns = implode(', ', $columns);
-        $selectDbRecords = "SELECT $columns
-                                FROM $table";
+        global $wpdb;
+        $dbColumns = $this->dbColumns;
+        $postType = $this->postType;
+        $dbColumns = implode(', ', $dbColumns);
 
-        $getAllRecordsFromDB = $this->conn->query($selectDbRecords);
+        $query = "SELECT *
+          FROM $wpdb->posts
+          LEFT JOIN $wpdb->postmeta
+          ON ($wpdb->posts.ID = $wpdb->postmeta.post_id)
+          WHERE $wpdb->posts.post_type = '".$postType. "'
+          AND $wpdb->posts.post_name = '".$excelRow['stockID']."'
+          ORDER BY post_date DESC";
 
-        if ($this->conn->errno)
-        {
-            die("Fail Select " . $this->conn->error);
+
+
+        $mysqlDataArray = $wpdb->get_row($query);
+
+        //print_r($mysqlDataArray);
+
+        $metafields[0] = get_post_meta($mysqlDataArray->ID);
+
+        foreach($metafields as $singleField) {
+            echo $singleField;
         }
-        else
-        {
-            if($getAllRecordsFromDB->num_rows>0) {
-                return $getAllRecordsFromDB->fetch_all(MYSQLI_ASSOC);
-            }
-            else
-            {
-                echo "Database is empty.";
-            }
 
+        $dbColumns = explode(', ', $dbColumns);
+
+        print_r($dbColumns);
+        foreach($dbColumns as $column) {
+            echo $metafields[$column];
         }
+
+        //echo $mysqlDataArray->meta_key;
+
+//        echo '<pre>';
+//        print_r($mysqlDataArray);
+//        echo '<pre>';
+
+
+//        if($mysqlDataArray->num_rows>0) {
+//            echo "hi";
+//        }
+//        else {
+//            echo "DB is Empty";
+//        }
+
+
+
         //print_r($getAllRecordsFromDB);
 
     }
@@ -118,26 +103,40 @@ class Excel2Mysql extends Custom_Filter_For_Excel
         }
     }
 
-    public function get_records_from_excel($inputFileName, $inputFileType, $sheetname)
+    public function get_records_from_excel($sheetname, $inputFileName)
     {
-//        /**  Create an Instance of our Read Filter, passing in the cell range  **/
-//        $filterSubset = new Custom_Filter_For_Excel(2,50,range('A','I'));
-//
-//        $objReader = PHPExcel_IOFactory::createReader($inputFileType);
-//        $objReader->setLoadSheetsOnly($sheetname);
-//        $objReader->setReadFilter($filterSubset);
-//        $objPHPExcel = $objReader->load($inputFileName);
-
-         $excelSheetDataArray = $objPHPExcel->getActiveSheet()->toArray(null,true,true,true);
-         //return $objPHPExcel->getActiveSheet()->toArray(null,true,true,true);
-
-            echo '<pre>';
-            print_r($excelSheetDataArray);
-            echo '</pre>';
+        $inputFileType = 'Excel2007';
+        $dbColumns = $this->dbColumns;  // Get value in $dbcolumns variable
 
 
-        //$this->get_duplicate_records_from_db($excelSheetDataArray, $table);
+        /**  Create an Instance of our Read Filter, passing in the cell range  **/
+        $filterSubset = new Custom_Filter_For_Excel(2,50,range('A','I'));
 
+        $objReader = PHPExcel_IOFactory::createReader($inputFileType);
+        $objReader->setLoadSheetsOnly($sheetname);
+        $objReader->setReadFilter($filterSubset);
+
+
+        // if excel file is added then
+        if (!empty($inputFileName))
+        {
+            $objPHPExcel = $objReader->load($inputFileName);
+            $excelSheetDataArray = $objPHPExcel->getActiveSheet()->toArray(null,true,true,true);
+            //echo '<pre>';
+            //print_r($excelSheetDataArray);
+            //echo '</pre>';
+
+            foreach ($excelSheetDataArray as $excelRow) {
+                $excelSheetValues = array_values($excelRow);
+                //print_r($excelSheetValues);
+
+                $excelRowSanitizedArray = array_combine($dbColumns, $excelSheetValues);
+
+               if(!empty($excelRowSanitizedArray['stockID'])) { // return array which have a 'stockID'
+                    return $excelRowSanitizedArray;
+               }
+            }
+        }
     }
 
 

@@ -18,6 +18,7 @@ Collapse: false
 ?>
 
 <?php
+
 $attachmentID = get_post_meta($post->ID, 'performance_excel_file', TRUE);
 $inputFileName = get_attached_file($attachmentID);
 
@@ -33,52 +34,29 @@ $inputFileName = get_attached_file($attachmentID);
     )
     ));
 
-    echo $inputFileName. '<br>';
-
-
-global $wpdb;
-
-//var_dump($wpdb);
-
-$query = "SELECT *
-          FROM $wpdb->posts
-          LEFT JOIN $wpdb->postmeta
-          ON ($wpdb->posts.ID = $wpdb->postmeta.post_id)
-          WHERE $wpdb->posts.post_type = 'performance_excel'
-          AND $wpdb->posts.ID = '120'
-          ORDER BY post_date DESC";
-
-$mysqlDataArray = $wpdb->get_results($query);
-
-echo '<pre>';
-print_r($mysqlDataArray);
-echo '<pre>';
-
+    // echo $inputFileName. '<br>';
 
 /************************************************************************************/
 /************************************************************************************/
-
-$inputFileType = 'Excel2007';
 $sheetname      = 'Equity';
 
-
-/**  Create an Instance of our Read Filter, passing in the cell range  **/
-        $filterSubset = new Custom_Filter_For_Excel(2,50,range('A','I'));
+$report = new Excel2Mysql();
 
 
-        $objReader = PHPExcel_IOFactory::createReader($inputFileType);
-        $objReader->setLoadSheetsOnly($sheetname);
-        $objReader->setReadFilter($filterSubset);
-        $objPHPExcel = $objReader->load($inputFileName);
+
+$excelRow = $report->get_records_from_excel($sheetname, $inputFileName);
+
+echo 'Excel- <pre>';
+print_r($excelRow);
+echo '<pre>';
+/**********************************************************************************/
 
 
-        $excelSheetDataArray = $objPHPExcel->getActiveSheet()->toArray(null,true,true,true);
+$dbRow = $report->fetch_records_from_db($excelRow);
 
-        echo '<pre>';
-        print_r($excelSheetDataArray);
-        echo '</pre>';
-
-
+//echo '<pre>';
+//print_r($dbRow);
+//echo '<pre>';
 
 
 
