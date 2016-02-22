@@ -29,51 +29,36 @@ class Excel2Mysql extends Custom_Filter_For_Excel
         $postType = $this->postType;
         $dbColumns = implode(', ', $dbColumns);
 
-        $query = "SELECT *
+        $query = "SELECT meta_key, meta_value
           FROM $wpdb->posts
           LEFT JOIN $wpdb->postmeta
           ON ($wpdb->posts.ID = $wpdb->postmeta.post_id)
           WHERE $wpdb->posts.post_type = '".$postType. "'
           AND $wpdb->posts.post_name = '".$excelRow['stockID']."'
+          AND $wpdb->posts.ID = $wpdb->postmeta.post_id
           ORDER BY post_date DESC";
 
-
-
-        $mysqlDataArray = $wpdb->get_row($query);
+        $mysqlDataArray = $wpdb->get_results($query);
 
         //print_r($mysqlDataArray);
-
-        $metafields[0] = get_post_meta($mysqlDataArray->ID);
-
-        foreach($metafields as $singleField) {
-            echo $singleField;
-        }
-
+        
         $dbColumns = explode(', ', $dbColumns);
+        
+        foreach($mysqlDataArray as $rowArray) {
+            //print_r($rowArray);
+            //echo $rowArray->meta_key;
+            //echo $rowArray->meta_value;
 
-        print_r($dbColumns);
-        foreach($dbColumns as $column) {
-            echo $metafields[$column];
+            foreach($dbColumns as $col)
+            {
+                if(($rowArray->meta_key) == $col)
+                {
+                    $sanitizedDbMetaRow[$rowArray->meta_key] = $rowArray->meta_value;
+            
+                }             
+            }            
         }
-
-        //echo $mysqlDataArray->meta_key;
-
-//        echo '<pre>';
-//        print_r($mysqlDataArray);
-//        echo '<pre>';
-
-
-//        if($mysqlDataArray->num_rows>0) {
-//            echo "hi";
-//        }
-//        else {
-//            echo "DB is Empty";
-//        }
-
-
-
-        //print_r($getAllRecordsFromDB);
-
+        return $sanitizedDbMetaRow;
     }
 
 

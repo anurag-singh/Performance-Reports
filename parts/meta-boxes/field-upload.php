@@ -54,9 +54,12 @@ echo '<pre>';
 
 $dbRow = $report->fetch_records_from_db($excelRow);
 
-//echo '<pre>';
-//print_r($dbRow);
-//echo '<pre>';
+echo 'DB- <pre>';
+print_r($excelRow);
+echo '<pre>';
+
+/**********************************************************************************/
+$duplicate = $report->get_duplicate_records_from_db($excelRow);
 
 
 

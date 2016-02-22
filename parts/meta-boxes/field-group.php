@@ -15,7 +15,7 @@ Order: 80
 
       array(
         'type' => 'text'
-        ,'field' => 'uni_code'
+        ,'field' => 'stockID'
         ,'label' => 'Unique Code'
         ,'columns' => 6
         ,'attributes' => array(
@@ -25,7 +25,7 @@ Order: 80
 
       ,array(
         'type' => 'text'
-        ,'field' => 'stocks'
+        ,'field' => 'stockName'
         ,'label' => 'Stocks'
         ,'columns' => 6
         ,'attributes' => array(
@@ -44,7 +44,7 @@ Order: 80
 
       ,array(
         'type' => 'text'
-        ,'field' => 'entry_date'
+        ,'field' => 'entryDate'
         ,'label' => 'Entry Date'
         ,'columns' => 6
         ,'attributes' => array(
@@ -53,7 +53,7 @@ Order: 80
       )
         ,array(
         'type' => 'text'
-        ,'field' => 'entry_price'
+        ,'field' => 'entryPrice'
         ,'label' => 'Entry Price'
         ,'columns' => 6
         ,'attributes' => array(
@@ -63,7 +63,7 @@ Order: 80
 
       ,array(
         'type' => 'text'
-        ,'field' => 'target_price'
+        ,'field' => 'targetPrice'
         ,'label' => 'Target Price'
         ,'columns' => 6
         ,'attributes' => array(
@@ -72,7 +72,7 @@ Order: 80
       )
         ,array(
         'type' => 'text'
-        ,'field' => 'stop_loss'
+        ,'field' => 'stopLoss'
         ,'label' => 'Stop Loss'
         ,'columns' => 6
         ,'attributes' => array(
@@ -82,7 +82,7 @@ Order: 80
 
       ,array(
         'type' => 'text'
-        ,'field' => 'exit_date'
+        ,'field' => 'exitDate'
         ,'label' => 'Exit Date'
         ,'columns' => 6
         ,'attributes' => array(
@@ -91,7 +91,7 @@ Order: 80
       )
       ,array(
         'type' => 'text'
-        ,'field' => 'exit_price'
+        ,'field' => 'exitPrice'
         ,'label' => 'Exit Price'
         ,'columns' => 6
         ,'attributes' => array(
