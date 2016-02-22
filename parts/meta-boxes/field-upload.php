@@ -46,23 +46,17 @@ $report = new Excel2Mysql();
 
 $sheetData = $report->get_records_from_excel($sheetname, $inputFileName);
 
-//foreach($sheetData as $aaa => $v) {
-//    echo $aaa . ' - ' .$v;
-//    foreach($aaa as $aa) {
-//        echo $aa;
-//    }
-//}
-echo 'Excel- <pre>';
-print_r($sheetData);
-echo '<pre>';
+//echo 'Excel- <pre>';
+//print_r($sheetData);
+//echo '<pre>';
 /**********************************************************************************/
 
 
 $dbRow = $report->fetch_records_from_db($sheetData);
 
-echo 'DB- <pre>';
-print_r($dbRow);
-echo '<pre>';
+//echo 'DB- <pre>';
+//print_r($dbRow);
+//echo '<pre>';
 
 /**********************************************************************************/
 $duplicate = $report->get_duplicate_records_from_db($sheetData, $dbRow);

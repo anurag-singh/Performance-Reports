@@ -62,7 +62,7 @@ class Excel2Mysql extends Custom_Filter_For_Excel
             }
             return $sanitizedDbMetaRow;
         }    
-    }
+    }   
 
 
     /* Add records in database table    */
@@ -91,6 +91,7 @@ class Excel2Mysql extends Custom_Filter_For_Excel
         }
     }
 
+    
     public function get_records_from_excel($sheetname, $inputFileName)
     {
         $inputFileType = 'Excel2007';
@@ -135,23 +136,64 @@ class Excel2Mysql extends Custom_Filter_For_Excel
 
 
     public function get_duplicate_records_from_db($sheetData, $dbRow)
-    {
-        
-
-        foreach ($sheetData as $excelrow) {
-            //echo $excelrow['A'];
-            if(!empty($excelrow['A']))
-            {
+    {    
+        global $wpdb;
+        $dbColumns = $this->dbColumns;
+        foreach ($sheetData as $excelRow) {
+            //echo $excelrow['stockID'];
+//            if(!empty($excelrow['stockID']))
+//            {
 
 //                echo '<hr>Excel Records - <pre>';
 //                print_r($excelrow);
 //                echo '</pre>';
 
-
-            $selectDuplicateRecordsFromDB = "SELECT $colNames FROM $table WHERE stockID = '".$excelrow['A']."'";
-
-                $duplicateRowsFromDB = $this->conn->query($selectDuplicateRecordsFromDB);
-
+//
+//            $selectDuplicateRecordsFromDB = "SELECT $colNames FROM $table WHERE stockID = '".$excelrow['A']."'";
+//
+//                $duplicateRowsFromDB = $this->conn->query($selectDuplicateRecordsFro
+                
+            
+            $query = "  SELECT      meta_key, meta_value
+                        FROM        $wpdb->postmeta
+                        LEFT JOIN   $wpdb->posts
+                        ON          ($wpdb->postmeta.post_id = $wpdb->posts.ID)
+                        WHERE       $wpdb->posts.post_name = '" .$excelRow['stockID']. "'
+                        ORDER BY    post_date ASC
+                    ";
+            
+            $duplicateRowsFromDB = $wpdb->get_results($query);
+            
+            if(!empty ($duplicateRowsFromDB)) 
+            {
+//                echo '<pre>';
+//                print_r($duplicateRowsFromDB);
+//                echo '</pre>';
+                
+                foreach ($duplicateRowsFromDB as $duplicateRow) 
+                {
+                    //echo $duplicateRow->meta_key;
+                    //echo $duplicateRow->meta_value;
+                    foreach ($dbColumns as $col)
+                    {
+                        //echo $col. ' = ' .$duplicateRow->meta_key. '<br>';
+                        if(($duplicateRow->meta_key == $col) )
+                        {
+                          $sanitizedDuplicateDbMetaRow[$duplicateRow->meta_key] = $duplicateRow->meta_value; 
+                        }                            
+                    }
+                }
+                
+                
+                $dataToUpdateInDB = array_diff_assoc($excelRow, $sanitizedDuplicateDbMetaRow);
+                echo '<pre>';
+                print_r($excelRow);
+                print_r($sanitizedDuplicateDbMetaRow);                
+                print_r($dataToUpdateInDB);                
+                echo '</pre>';
+                
+            }
+            
                 if($duplicateRowsFromDB === FALSE)
                 {
                     trigger_error('Wrong SQL : '. $selectDuplicateRecordsFromDB. '<br><b>Error : </b>' .$this->conn->error, E_USER_ERROR);
@@ -223,7 +265,7 @@ class Excel2Mysql extends Custom_Filter_For_Excel
                                 echo '<br><b style =color:#f00;>Error - </b>' . $conn->error;
                             }
                     }
-                }
+//                }
             }
         }
 
